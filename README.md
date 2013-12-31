@@ -12,3 +12,27 @@ attoparsec, it is a first effort in using it and I am quite happy with that
 - TODO: Clean up messy parsing of word16 values
 - TODO: Write tests
 
+## ConnectedComponent
+
+an older challenge from amazon code ninjas, a friend told me:
+
+if you have an array consisting of '1's and '0'es find the number ilands of '1's
+
+        1000000000
+        0000110000
+        0001001000
+        0010000100
+        0010000100
+        0001001000
+        0000110000
+        0000001000
+        1110000111
+        0010000101
+        1010000101
+
+cells are connected vertically, horizontally and diagonally so the above image
+has 3 connected components.
+
+DONE: List version
+TODO: Map version
+TODO: Array version
