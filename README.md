@@ -36,3 +36,8 @@ has 4 connected components.
 - DONE: List version
 - TODO: Map version
 - TODO: Array version
+
+## Codingame
+
+implementations of the examples found at codingame.com
+### Scrabble ✔

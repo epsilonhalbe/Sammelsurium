@@ -13,3 +13,5 @@ cabal.config
 PXM-Parser/Main
 
 ConnectedComponent/*/CC
+
+Codingame/Scrabble/Scrabble
