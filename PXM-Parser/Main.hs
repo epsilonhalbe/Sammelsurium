@@ -7,6 +7,6 @@ import PXMParser
 main :: IO ()
 main = do bs <- B.getContents
           let pxm = parseOnly parsePXM bs
-          case pxm of Right _  -> putStrLn "OK"
+          case pxm of Right x  -> print x
                       Left msg -> putStrLn msg
 

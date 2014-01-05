@@ -1,30 +1,47 @@
 module PXMParser where
 
 import PXM
-import Control.Applicative ((<|>))
-import Data.Array
-import Data.ByteString
-import Data.Attoparsec.Char8
-import qualified Data.Attoparsec.ByteString as B
-import Data.Word
+import ASCII.Parser
+import ASCII.Wide.Parser
+import Raw.Parser
+import Raw.Wide.Parser
+import Util.Parser
+
+import Control.Applicative ((<$>))
+import Data.Array (listArray)
+import Data.Attoparsec.Char8 ( Parser
+                             , many'
+                             , decimal
+                             , char
+                             , digit)
 
 parsePXM :: Parser PXM
 parsePXM = do _ <- comments
               headr@(Header idy w h d) <- parseHeader
               -- dispatching according to magic values
               let mkArray = listArray ((1,1),(h,w))
-              case idy of P1 -> do arr <- parsePBMascii
+              case idy of P1 -> do arr <- manyf bool
                                    return $ PBM headr (mkArray arr)
-                          P2 -> do arr <- parsePGMascii d
-                                   return $ PGM headr (mkArray arr)
-                          P3 -> do arr <- parsePPMascii d
-                                   return $ PPM headr (mkArray arr)
-                          P4 -> do arr <- parsePBMraw
+                          P2 -> if d<=256 then do arr <- manyf $ ASCII.Parser.gray d
+                                                  return $ PGM headr (mkArray arr)
+                                            else do arr <- manyf $ ASCII.Wide.Parser.gray d
+                                                    return $ PGMWide headr (mkArray arr)
+                          P3 -> if d<=256 then do arr <- manyf $ ASCII.Parser.pixel d
+                                                  return $ PPM headr (mkArray arr)
+                                            else do arr <- manyf $ ASCII.Wide.Parser.pixel d
+                                                    return $ PPMWide headr (mkArray arr)
+                          P4 -> do arr <- concat <$> manyf (boolRow w)
                                    return $ PBM headr (mkArray arr)
-                          P5 -> do arr <- parsePGMraw d
-                                   return $ PGM headr (mkArray arr)
-                          P6 -> do arr <- parsePPMraw d
-                                   return $ PPM headr (mkArray arr)
+                          P5 -> if d<=256 then do arr <- manyf $ Raw.Parser.gray d
+                                                  return $ PGM headr (mkArray arr)
+                                            else do arr <- manyf $ Raw.Wide.Parser.gray d
+                                                    return $ PGMWide headr (mkArray arr)
+                          P6 -> if d<=256 then do arr <- manyf $ Raw.Parser.pixel d
+                                                  return $ PPM headr (mkArray arr)
+                                            else do arr <- manyf $ Raw.Wide.Parser.pixel d
+                                                    return $ PPMWide headr (mkArray arr)
+
+         where manyf = many' . filtered
 
 parseHeader :: Parser Header
 parseHeader = do _ <- comments
@@ -45,59 +62,8 @@ parseHeader = do _ <- comments
                                                return depth
                  return $ Header idy width height depth
 
--- Bitmap Parsing
-parsePBMascii :: Parser [Bit]
-parsePBMascii = many' (filtered bit)
+-- Boolmap Parsing
 
-parsePBMraw :: Parser [Bit]
-parsePBMraw = undefined
-
-bit :: Parser Bit
-bit = do c <- char '1' <|>  char '0'
-         case c of '1' -> return True
-                   '0' -> return False
-                   _   -> error "neither '0' nor '1' character in bitmap"
-
-parsePGMascii :: Depth ->  Parser [Grayscale]
-parsePGMascii d = many' (filtered $ grayscale d)
-
-parsePGMraw :: Depth ->  Parser [Grayscale]
-parsePGMraw d = many' (filtered $ rawGrayscale d)
-
-grayscale :: Depth -> Parser Grayscale
-grayscale d = do g <- decimal
-                 bounded d g
-
-rawGrayscale :: Depth -> Parser Grayscale
-rawGrayscale d = if d < 256 then do g <- B.anyWord8
-                                    bounded d $ fromIntegral g
-                            else do g <- anyWord16
-                                    bounded d $ fromIntegral g
-
-parsePPMascii :: Depth ->  Parser [Pixel]
-parsePPMascii d = many' (filtered $ pixel d)
-
-parsePPMraw :: Depth ->  Parser [Pixel]
-parsePPMraw d = many' (filtered $ rawPixel d)
-
-rawPixel :: Depth -> Parser Pixel
-rawPixel d = if d < 256 then do red   <- bounded d . fromIntegral =<< B.anyWord8
-                                green <- bounded d . fromIntegral =<< B.anyWord8
-                                blue  <- bounded d . fromIntegral =<< B.anyWord8
-                                return $ Pixel red green blue
-                        else do red   <- bounded d . fromIntegral =<< anyWord16
-                                green <- bounded d . fromIntegral =<< anyWord16
-                                blue  <- bounded d . fromIntegral =<< anyWord16
-                                return $ Pixel red green blue
-
-pixel :: Depth -> Parser Pixel
-pixel d = do red   <- bounded d =<< decimal
-             _     <- whiteSpaces
-             green <- bounded d =<< decimal
-             _     <- whiteSpaces
-             blue  <- bounded d =<< decimal
-             _     <- whiteSpaces
-             return $ Pixel red green blue
 
 magic :: Parser Magic
 magic = do _ <- char 'P'
@@ -109,35 +75,4 @@ magic = do _ <- char 'P'
                        '5' -> return P5
                        '6' -> return P6
                        _   -> error "no valid magic value"
-
-whiteSpaces :: Parser String
-whiteSpaces = many' whiteSpace
-
-whiteSpace :: Parser Char
-whiteSpace = char ' ' <|> char '\r' <|> char '\n'
-
-comments :: Parser [ByteString]
-comments = many' comment
-
-comment :: Parser ByteString
-comment = do _ <- whiteSpace
-             _ <- char '#'
-             B.takeTill isEndOfLine
-
-bounded :: (Monad m, Show a, Ord a) => a -> a -> m a
-bounded d x = if x<=d then return x
-                      else error $ "Value out of bounds!\n"++
-                                   "Expected less or equal than "++show d++
-                                   ", but got "++show x
-
-filtered :: Parser a -> Parser a
-filtered prsr = do _ <- whiteSpaces
-                   prsr
-
-anyWord16 :: Parser Word16
-anyWord16 = do hi <-B.anyWord8
-               lo <- B.anyWord8
-               let hi' = 256 * fromIntegral hi :: Word16
-                   lo' = fromIntegral lo :: Word16
-               return $ hi' + lo'
 
