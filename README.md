@@ -3,6 +3,15 @@
 This is a collection of toy projects done in haskell
 Everything in here is published under the BSD3 License
 
+## EquationX
+
+is a try in the study of linear equations in one variable - I want to generate,
+parse, print and modify symbolically linear equations. The variable is a called
+X, as it is most common. Have not tested any code yet. But look forward to
+seeing how the simplify process works.
+
+There exists nice syntax for manipulating equations by hand.
+
 ## PXMParser
 
 is a parser for images of the type `*.pbm`, `*.pgm` and `*.ppm` written with
