@@ -3,6 +3,19 @@
 This is a collection of toy projects done in haskell
 Everything in here is published under the BSD3 License
 
+## PDFPages
+
+A small tool to append the number of pages to a pdf or all pdfs in a folder
+Usage:
+
+    > ./PDFPages myfile.pdf # for a single file
+    > ./PDFPages # for the current folder
+
+## MIT 6.006
+
+I am recently (Jan2014) watching the MIT Algorithms Courses and try to implement
+some of the examples and data structures myself
+
 ## EquationX
 
 is a try in the study of linear equations in one variable - I want to generate,

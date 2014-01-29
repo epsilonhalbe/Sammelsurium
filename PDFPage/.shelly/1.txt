@@ -1,0 +1,2 @@
+./ pdfinfo 'With Worked Examples, Fourth Edition 0.pdf'
+which ./

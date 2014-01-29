@@ -9,7 +9,7 @@ import Data.Ratio
 
 parseAtom :: Parser Atom
 parseAtom = parseX <|> parseN
-  where parseN :: Parser Atom
+  where parseN :: Parser Atom --------- make parse integers too
         parseN = do n <- decimal
                     char '%'
                     m <- decimal

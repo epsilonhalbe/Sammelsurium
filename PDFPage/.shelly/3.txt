@@ -1,0 +1,2 @@
+/home/epsilonhalbe/.data/procrapping/haskell/PDFPage pdfinfo 'With Worked Examples, Fourth Edition 0.pdf'
+which /home/epsilonhalbe/.data/procrapping/haskell/PDFPage

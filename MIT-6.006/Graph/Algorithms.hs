@@ -5,7 +5,7 @@
 
 module Algorithms where
 
-import Graph.Data
+import Data
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 
@@ -35,10 +35,38 @@ bfs start = loop [] (Set.singleton start)
                                then reverse acc
                                else loop (ss:acc) l' g
 
-dfs :: a -> a -> DGraph a -> Map.Map a [a]
-dfs src trgt g = undefined
+dfs :: (Ord a) => a -> DGraph a -> Map.Map a [(a,Edge)]
+-- | dfs = depth first search is an algorithm to walk to every node in a given
+-- tree starting from one node - during this procedure every edge is visited and
+-- can be classified to be one of the following: Tree-Edge
+--                                               Forward-Edge
+--                                               Back-Edge
+--                                               Cross-Edge
+--
+-- The algorithm is calculated in the following three steps:
+-- Step 1: take a node follow edge and make a zipper structure of parent for
+--         backtracking, make sure that you don't visit any previous nodes/edges
+-- Step 2: repeat [Step 1] until you hit bottom
+-- Step 3: go back to the first place of choice and repeat Step 1/Step 2
+dfs src' g' = loop Map.empty Set.empty (vertices g') src' g'
+    where loop :: (Ord a) => Map.Map a [(a,Edge)] -> Set.Set a -> Set.Set a -> a -> DGraph a -> Map.Map a [(a,Edge)]
+          loop acc avail zpp src g
+               = if Set.null avail
+                   then acc
+                   else let nbs' = src `Map.lookup` adj g
+                        in case nbs' of Nothing  -> error "current key not in graph"
+                                        Just nbs -> Map.empty
 
 
 fromMaybeSet :: Maybe (Set.Set a) -> Set.Set a
 fromMaybeSet Nothing = Set.empty
 fromMaybeSet (Just s) = s
+
+
+
+
+
+
+
+
+
